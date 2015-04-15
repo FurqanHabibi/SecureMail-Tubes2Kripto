@@ -11,7 +11,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 
-public class DownloadEmail {
+public class EmailDownloader {
 	
 	private String imapProt;
 	private String imapHost;
@@ -21,22 +21,22 @@ public class DownloadEmail {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		DownloadEmail de = new DownloadEmail("imaps", "imap.gmail.com", "tubes.kripto.a", "tubeskript0");
-		int mode=3;
+		EmailDownloader ed = new EmailDownloader("imaps", "imap.gmail.com", "tubes.kripto.a", "tubeskript0");
+		int mode=2;
 		if (mode==1) {
-			de.signIn();
+			ed.signIn();
 		}
 		else if (mode==2) {
-			de.signIn();
-			Folder[] folders = de.getFolders();
+			ed.signIn();
+			Folder[] folders = ed.getFolders();
 			for (Folder f : folders) {
 				System.out.println(f.getFullName());
 			}
 		}
 		else if (mode==3) {
-			de.signIn();
-			Folder folder = de.openFolder("INBOX");
-			Message[] messages = de.getMessagesInFolder(folder);
+			ed.signIn();
+			Folder folder = ed.openFolder("INBOX");
+			Message[] messages = ed.getMessagesInFolder(folder);
 			for (Message m : messages) {
 				try {
 					System.out.println(m.getSubject());
@@ -45,11 +45,11 @@ public class DownloadEmail {
 					e.printStackTrace();
 				}
 			}
-			de.closeFolder(folder);
+			ed.closeFolder(folder);
 		}
 	}
 	
-	public DownloadEmail(String imapProt, String imapHost, String username, String password) {
+	public EmailDownloader(String imapProt, String imapHost, String username, String password) {
 		this.imapProt = imapProt;
 		this.imapHost = imapHost;
 		this.username = username;
