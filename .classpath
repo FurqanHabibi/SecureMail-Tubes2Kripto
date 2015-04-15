@@ -8,5 +8,6 @@
 			<attribute name="javadoc_location" value="https://javamail.java.net/nonav/docs/api/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/jsoup-1.8.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -5,8 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 
+import javax.mail.Address;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -23,7 +25,12 @@ import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
+import models.EmailModel;
+import models.FolderModel;
+import models.MessageModel;
 import emailprocessing.EmailDownloader;
 
 
@@ -47,9 +54,14 @@ public class SecureMail {
 	private JButton btnVerifySignature;
 	
 	private JList<String> listFolders;
-	private JList<String> listEmails;
+	private JList<String> listMessages;
 	private DefaultListModel<String> listModelFolders;
-	private DefaultListModel<String> listModelEmails;
+	private DefaultListModel<String> listModelMessages;
+	
+	private JFrame frame1;
+	private JButton btnOk;
+	private JTextField textFieldUserName;
+	private JPasswordField textFieldPassword;
 	
 	private String imapProt = "imaps";
 	private String imapHost = "imap.gmail.com";
@@ -58,9 +70,12 @@ public class SecureMail {
 	private String username;
 	private String password;
 	
-	private EmailDownloader emailDownloader;
-	private Folder currentFolder = null;
-	private Message[] currentMessages = null;
+	private EmailDownloader emailDownloader = null;
+//	private Folder currentFolder = null;
+//	private Message[] currentMessages = null;
+	private EmailModel emailModel;
+//	private int currentFolder;
+//	private int currentMessage;
 
 	/**
 	 * Launch the application.
@@ -83,6 +98,135 @@ public class SecureMail {
 	public SecureMail() {
 		initialize();
 		changeAccount();
+		
+		btnOk.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				username = textFieldUserName.getText();
+				password = new String(textFieldPassword.getPassword());
+				emailModel = getEmails();
+				listModelFolders.clear();
+				for (FolderModel fm : emailModel.getFolders()) {
+					listModelFolders.addElement(fm.getName());
+				}
+				listModelMessages.clear();
+	        	textAreaContent.setText("");
+				frame1.dispatchEvent(new WindowEvent(frame1, WindowEvent.WINDOW_CLOSING));
+			}
+		});
+		
+		listFolders.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting() == false) {
+			        if (listFolders.getSelectedIndex() != -1) {
+			        	listModelMessages.clear();
+			        	for (MessageModel mm : emailModel.getFolders().get(listFolders.getSelectedIndex()).getMessages()) {
+			        		listModelMessages.add(0, mm.getSubject());
+			        	}
+			        	textAreaContent.setText("");
+			        }
+			    }
+			}
+		});
+		
+		listMessages.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting() == false) {
+			        if (listMessages.getSelectedIndex() != -1) {
+			        	MessageModel mm = emailModel.getFolders().get(listFolders.getSelectedIndex()).getMessages().get(listModelMessages.getSize()-listMessages.getSelectedIndex()-1);
+			        	textAreaContent.setText(mm.toString());
+			        }
+			    }
+			}
+		});
+
+		btnRefresh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				emailModel = getEmails();
+				listModelFolders.clear();
+				for (FolderModel fm : emailModel.getFolders()) {
+					listModelFolders.addElement(fm.getName());
+				}
+				listModelMessages.clear();
+	        	textAreaContent.setText("");
+			}
+		});
+		
+		btnChangeAccount.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				frame1.setVisible(true);
+			}
+		});
+	}
+	
+	private EmailModel getEmails() {
+		emailDownloader = new EmailDownloader();
+		emailDownloader.setParams(imapProt, imapHost, username, password);
+		emailDownloader.signIn();
+		
+		EmailModel emailModel = new EmailModel();
+		Folder[] folders = emailDownloader.getFolders();
+		for (Folder f : folders) {
+			FolderModel fm = new FolderModel(f.getName());
+			emailModel.addFolderModel(fm);
+			emailDownloader.openFolder(f);
+			Message[] messages = emailDownloader.getMessagesInFolder(f);
+			for (Message m : messages) {
+				MessageModel mm = new MessageModel();
+				fm.addMessageModel(mm);
+				try {
+					
+					Address[] adressFrom = m.getFrom();
+					if (adressFrom!=null) {
+						String[] from = new String[adressFrom.length];
+						for (int i=0; i<adressFrom.length; i++) {
+							from[i] = adressFrom[i].toString();
+						}
+						mm.setFrom(from);
+					}
+					
+					Address[] adressTOs = m.getRecipients(Message.RecipientType.TO);
+					if (adressTOs!=null) {
+						String[] TOs = new String[adressTOs.length];
+						for (int i=0; i<adressTOs.length; i++) {
+							TOs[i] = adressTOs[i].toString();
+						}
+						mm.setTOs(TOs);
+					}
+					
+					Address[] adressCCs = m.getRecipients(Message.RecipientType.CC);
+					if (adressCCs!=null) {
+						String[] CCs = new String[adressCCs.length];
+						for (int i=0; i<adressCCs.length; i++) {
+							CCs[i] = adressCCs[i].toString();
+						}
+						mm.setCCs(CCs);
+					}
+					
+					Address[] adressBCCs = m.getRecipients(Message.RecipientType.BCC);
+					if (adressBCCs!=null) {
+						String[] BCCs = new String[adressBCCs.length];
+						for (int i=0; i<adressBCCs.length; i++) {
+							BCCs[i] = adressBCCs[i].toString();
+						}
+						mm.setBCCs(BCCs);
+					}
+					
+					mm.setSentDate(m.getSentDate());
+					
+					mm.setSubject(m.getSubject());
+					
+					mm.setContent(emailDownloader.getMessageContent(m));
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			emailDownloader.closeFolder(f);
+		}
+		
+		emailDownloader.signOut();
+		return emailModel;
 	}
 
 	/**
@@ -179,13 +323,13 @@ public class SecureMail {
 		listFolders = new JList<String>(listModelFolders);
 		scrollPaneFolders.setViewportView(listFolders);
 		
-		listModelEmails = new DefaultListModel<String>();
-		listEmails = new JList<String>(listModelEmails);
-		scrollPaneEmails.setViewportView(listEmails);
+		listModelMessages = new DefaultListModel<String>();
+		listMessages = new JList<String>(listModelMessages);
+		scrollPaneEmails.setViewportView(listMessages);
 	}
 	
 	private void changeAccount() {
-		JFrame frame1 = new JFrame("Sign In");
+		frame1 = new JFrame("Sign In");
 		frame1.setBounds(100, 100, 300, 200);
 		frame1.setLocationRelativeTo(null);
 
@@ -194,22 +338,14 @@ public class SecureMail {
 		frame1.setContentPane(contentPane);
 		
 		JLabel lblUsername = new JLabel("Username :");
-		JTextField textFieldUserName = new JTextField();
+		textFieldUserName = new JTextField();
 		textFieldUserName.setColumns(10);
 		
 		JLabel lblPassword = new JLabel("Password :");
-		JPasswordField textFieldPassword = new JPasswordField();
+		textFieldPassword = new JPasswordField();
 		textFieldPassword.setColumns(10);
 		
-		JButton btnOk = new JButton("OK");
-		btnOk.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				username = textFieldUserName.getText();
-				password = new String(textFieldPassword.getPassword());
-				getEmails();
-				frame1.dispatchEvent(new WindowEvent(frame1, WindowEvent.WINDOW_CLOSING));
-			}
-		});
+		btnOk = new JButton("OK");
 		
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
@@ -244,17 +380,5 @@ public class SecureMail {
 		);
 		contentPane.setLayout(gl_contentPane);
 		frame1.setVisible(true);
-	}
-
-	private void getEmails() {
-		//System.out.println(imapProt+ imapHost+ username+ password);
-		emailDownloader = new EmailDownloader(imapProt, imapHost, username, password);
-		emailDownloader.signIn();
-		
-		Folder[] folders = emailDownloader.getFolders();
-		listModelFolders.clear();
-		for (Folder f : folders) {
-			listModelFolders.addElement(f.getFullName());
-		}
 	}
 }
