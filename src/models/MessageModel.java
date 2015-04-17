@@ -2,12 +2,14 @@ package models;
 
 import java.util.Date;
 
+import javax.mail.Address;
+
 public class MessageModel {
 
-	private String[] from;
-	private String[] TOs;
-	private String[] CCs;
-	private String[] BCCs;
+	private Address[] from;
+	private Address[] TOs;
+	private Address[] CCs;
+	private Address[] BCCs;
 	private Date sentDate;
 	private String subject;
 	private String content;
@@ -15,25 +17,25 @@ public class MessageModel {
 	public String toString() {
 		String from = "";
     	if (getFrom()!=null) {
-    		for (String s : getFrom()) {
+    		for (Address s : getFrom()) {
     			from += s+" ";
     		}
     	}
     	String TOs = "";
     	if (getTOs()!=null) {
-    		for (String s : getTOs()) {
+    		for (Address s : getTOs()) {
     			TOs += s+" ";
     		}
     	}
     	String CCs = "";
     	if (getCCs()!=null) {
-    		for (String s : getCCs()) {
+    		for (Address s : getCCs()) {
     			CCs += s+" ";
     		}
     	}
     	String BCCs = "";
     	if (getBCCs()!=null) {
-    		for (String s : getBCCs()) {
+    		for (Address s : getBCCs()) {
     			BCCs += s+" ";
     		}
     	}
@@ -41,28 +43,28 @@ public class MessageModel {
     	return ("FROM : "+from+"\nTO : "+TOs+"\nCC : "+CCs+"\nBCC : "+BCCs+"\nSENT : "+sentDate+"\nSUBJECT : "+subject+"\nCONTENT :\n"+content);
 	}
 	
-	public String[] getFrom() {
+	public Address[] getFrom() {
 		return from;
 	}
-	public void setFrom(String[] from) {
+	public void setFrom(Address[] from) {
 		this.from = from;
 	}
-	public String[] getTOs() {
+	public Address[] getTOs() {
 		return TOs;
 	}
-	public void setTOs(String[] TOs) {
+	public void setTOs(Address[] TOs) {
 		this.TOs = TOs;
 	}
-	public String[] getCCs() {
+	public Address[] getCCs() {
 		return CCs;
 	}
-	public void setCCs(String[] CCs) {
+	public void setCCs(Address[] CCs) {
 		this.CCs = CCs;
 	}
-	public String[] getBCCs() {
+	public Address[] getBCCs() {
 		return BCCs;
 	}
-	public void setBCCs(String[] BCCs) {
+	public void setBCCs(Address[] BCCs) {
 		this.BCCs = BCCs;
 	}
 	public Date getSentDate() {
