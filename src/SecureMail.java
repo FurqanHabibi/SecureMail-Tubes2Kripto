@@ -32,6 +32,7 @@ import models.EmailModel;
 import models.FolderModel;
 import models.MessageModel;
 import emailprocessing.EmailDownloader;
+import gui.ReceiveMessageFrame;
 import gui.SendMessageFrame;
 
 
@@ -52,7 +53,6 @@ public class SecureMail {
 	private JButton btnChangeAccount;
 	private JButton btnGenerateKeys;
 	private JButton btnDecrypt;
-	private JButton btnVerifySignature;
 	
 	private JList<String> listFolders;
 	private JList<String> listMessages;
@@ -73,6 +73,7 @@ public class SecureMail {
 	
 	private EmailDownloader emailDownloader = null;
 	private EmailModel emailModel;
+	protected ReceiveMessageFrame receiveMessageFrame;
 
 	/**
 	 * Launch the application.
@@ -302,11 +303,43 @@ public class SecureMail {
 		panelContentActions = new JPanel();
 		panelContent.add(panelContentActions, BorderLayout.SOUTH);
 		
-		btnDecrypt = new JButton("Decrypt");
+		btnDecrypt = new JButton("Decrypt & Verify");
+		btnDecrypt.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (listMessages.getSelectedIndex() != -1) {
+		        	MessageModel mm = emailModel.getFolders().get(listFolders.getSelectedIndex()).getMessages().get(listModelMessages.getSize()-listMessages.getSelectedIndex()-1);
+		        	
+		        	if (receiveMessageFrame==null) {
+						receiveMessageFrame = new ReceiveMessageFrame();
+					} 
+		        	
+		        	String from = "";
+		        	if (mm.getFrom()!=null) {
+		        		for (Address s : mm.getFrom()) {
+		        			from += s+" ";
+		        		}
+		        	}
+
+		        	String CCs = "";
+		        	if (mm.getCCs()!=null) {
+		        		for (Address s : mm.getCCs()) {
+		        			CCs += s+" ";
+		        		}
+		        	}
+		        	
+		        	String BCCs = "";
+		        	if (mm.getBCCs()!=null) {
+		        		for (Address s : mm.getBCCs()) {
+		        			BCCs += s+" ";
+		        		}
+		        	}
+					
+		        	receiveMessageFrame.setField(from, CCs, BCCs, mm.getSubject(), mm.getContent());
+					receiveMessageFrame.setVisible(true);
+		        }
+			}
+		});
 		panelContentActions.add(btnDecrypt);
-		
-		btnVerifySignature = new JButton("Verify Signature");
-		panelContentActions.add(btnVerifySignature);
 		
 		scrollPaneFolders = new JScrollPane();
 		splitPaneFoldersEmails.setLeftComponent(scrollPaneFolders);
