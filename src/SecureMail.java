@@ -36,7 +36,7 @@ import emailprocessing.EmailDownloader;
 
 public class SecureMail {
 
-	private JFrame frame;
+	private JFrame mainWindow;
 	private JPanel toolbar;
 	private JSplitPane splitPaneFoldersEmails;
 	private JSplitPane splitPaneEmailsContent;
@@ -58,24 +58,20 @@ public class SecureMail {
 	private DefaultListModel<String> listModelFolders;
 	private DefaultListModel<String> listModelMessages;
 	
-	private JFrame frame1;
+	private JFrame signInWindow;
 	private JButton btnOk;
 	private JTextField textFieldUserName;
 	private JPasswordField textFieldPassword;
 	
+	private SendMessageFrame sendMessageFrame;
+	
 	private String imapProt = "imaps";
 	private String imapHost = "imap.gmail.com";
-	private String smtpProt = "smtps";
-	private String smtpHost = "smtp.gmail.com";
 	private String username;
 	private String password;
 	
 	private EmailDownloader emailDownloader = null;
-//	private Folder currentFolder = null;
-//	private Message[] currentMessages = null;
 	private EmailModel emailModel;
-//	private int currentFolder;
-//	private int currentMessage;
 
 	/**
 	 * Launch the application.
@@ -97,7 +93,7 @@ public class SecureMail {
 	 */
 	public SecureMail() {
 		initialize();
-		changeAccount();
+		initializeSignIn();
 		
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -110,7 +106,7 @@ public class SecureMail {
 				}
 				listModelMessages.clear();
 	        	textAreaContent.setText("");
-				frame1.dispatchEvent(new WindowEvent(frame1, WindowEvent.WINDOW_CLOSING));
+				signInWindow.dispatchEvent(new WindowEvent(signInWindow, WindowEvent.WINDOW_CLOSING));
 			}
 		});
 		
@@ -153,7 +149,18 @@ public class SecureMail {
 		
 		btnChangeAccount.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				frame1.setVisible(true);
+				showSignIn();
+			}
+		});
+		
+		btnNewMessage.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (sendMessageFrame==null) {
+					sendMessageFrame = new SendMessageFrame(username, password);
+				}
+				else {
+					sendMessageFrame.show(username, password);
+				}
 			}
 		});
 	}
@@ -175,41 +182,13 @@ public class SecureMail {
 				fm.addMessageModel(mm);
 				try {
 					
-					Address[] adressFrom = m.getFrom();
-					if (adressFrom!=null) {
-						String[] from = new String[adressFrom.length];
-						for (int i=0; i<adressFrom.length; i++) {
-							from[i] = adressFrom[i].toString();
-						}
-						mm.setFrom(from);
-					}
+					mm.setFrom(m.getFrom());
 					
-					Address[] adressTOs = m.getRecipients(Message.RecipientType.TO);
-					if (adressTOs!=null) {
-						String[] TOs = new String[adressTOs.length];
-						for (int i=0; i<adressTOs.length; i++) {
-							TOs[i] = adressTOs[i].toString();
-						}
-						mm.setTOs(TOs);
-					}
+					mm.setTOs(m.getRecipients(Message.RecipientType.TO));
 					
-					Address[] adressCCs = m.getRecipients(Message.RecipientType.CC);
-					if (adressCCs!=null) {
-						String[] CCs = new String[adressCCs.length];
-						for (int i=0; i<adressCCs.length; i++) {
-							CCs[i] = adressCCs[i].toString();
-						}
-						mm.setCCs(CCs);
-					}
+					mm.setCCs(m.getRecipients(Message.RecipientType.CC));
 					
-					Address[] adressBCCs = m.getRecipients(Message.RecipientType.BCC);
-					if (adressBCCs!=null) {
-						String[] BCCs = new String[adressBCCs.length];
-						for (int i=0; i<adressBCCs.length; i++) {
-							BCCs[i] = adressBCCs[i].toString();
-						}
-						mm.setBCCs(BCCs);
-					}
+					mm.setBCCs(m.getRecipients(Message.RecipientType.BCC));
 					
 					mm.setSentDate(m.getSentDate());
 					
@@ -229,6 +208,13 @@ public class SecureMail {
 		return emailModel;
 	}
 
+	private void showSignIn() {
+		textFieldUserName.setText("");
+		textFieldPassword.setText("");
+		signInWindow.setVisible(true);
+	}
+	
+	
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -240,15 +226,15 @@ public class SecureMail {
 			e.printStackTrace();
 		}
 		
-		frame = new JFrame("SecureMail");
-		frame.setBounds(0, 0, 1000, 650);
-		frame.setLocationRelativeTo(null);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(new BorderLayout(0, 0));
-		frame.setVisible(true);
+		mainWindow = new JFrame("SecureMail");
+		mainWindow.setBounds(0, 0, 1000, 650);
+		mainWindow.setLocationRelativeTo(null);
+		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainWindow.getContentPane().setLayout(new BorderLayout(0, 0));
+		mainWindow.setVisible(true);
 		
 		toolbar = new JPanel();
-		frame.getContentPane().add(toolbar, BorderLayout.NORTH);
+		mainWindow.getContentPane().add(toolbar, BorderLayout.NORTH);
 		toolbar.setPreferredSize(new Dimension(10, 45));
 		
 		btnNewMessage = new JButton("New Message");
@@ -286,7 +272,7 @@ public class SecureMail {
 		toolbar.setLayout(gl_toolbar);
 		
 		splitPaneFoldersEmails = new JSplitPane();
-		frame.getContentPane().add(splitPaneFoldersEmails, BorderLayout.CENTER);
+		mainWindow.getContentPane().add(splitPaneFoldersEmails, BorderLayout.CENTER);
 		splitPaneFoldersEmails.setResizeWeight(0.2);
 		
 		splitPaneEmailsContent = new JSplitPane();
@@ -328,14 +314,14 @@ public class SecureMail {
 		scrollPaneEmails.setViewportView(listMessages);
 	}
 	
-	private void changeAccount() {
-		frame1 = new JFrame("Sign In");
-		frame1.setBounds(100, 100, 300, 200);
-		frame1.setLocationRelativeTo(null);
+	private void initializeSignIn() {
+		signInWindow = new JFrame("Sign In");
+		signInWindow.setBounds(100, 100, 300, 200);
+		signInWindow.setLocationRelativeTo(null);
 
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		frame1.setContentPane(contentPane);
+		signInWindow.setContentPane(contentPane);
 		
 		JLabel lblUsername = new JLabel("Username :");
 		textFieldUserName = new JTextField();
@@ -379,6 +365,8 @@ public class SecureMail {
 					.addGap(25))
 		);
 		contentPane.setLayout(gl_contentPane);
-		frame1.setVisible(true);
+		signInWindow.setVisible(true);
 	}
+
+
 }
