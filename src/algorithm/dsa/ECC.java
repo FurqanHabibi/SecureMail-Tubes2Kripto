@@ -1,8 +1,10 @@
-package algorithm;
+package algorithm.dsa;
 
 import java.math.BigInteger;
 
-import algorithm.Point;
+import algorithm.dsa.Point;
+
+
 
 public class ECC {
 	public static double EPS = 1e-5;

@@ -1,10 +1,12 @@
-package algorithm;
+package algorithm.dsa;
 
 import java.math.BigInteger;
 import java.util.Random;
 
-import algorithm.ECC;
-import algorithm.Point;
+import algorithm.dsa.ECC;
+import algorithm.dsa.Point;
+
+
 
 public class ECDSA {
 

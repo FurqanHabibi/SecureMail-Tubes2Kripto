@@ -1,4 +1,4 @@
-package algorithm;
+package algorithm.dsa;
 
 import java.math.BigInteger;
 
