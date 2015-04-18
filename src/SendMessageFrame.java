@@ -9,6 +9,7 @@ import javax.mail.internet.InternetAddress;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,6 +23,14 @@ import javax.swing.border.EmptyBorder;
 import models.MessageModel;
 import emailprocessing.EmailSender;
 
+import javax.swing.JCheckBox;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+
 
 public class SendMessageFrame extends JFrame {
 	private JTextField textFieldTo;
@@ -29,8 +38,6 @@ public class SendMessageFrame extends JFrame {
 	private JTextField textFieldBCC;
 	private JTextField textFieldSubject;
 	private JTextArea textAreaContent;
-	private JToggleButton tglbtnEncrypt;
-	private JToggleButton tglBtnDigitalSignature;
 	private JButton btnSend;
 
 	private String smtpProt = "smtps";
@@ -38,6 +45,18 @@ public class SendMessageFrame extends JFrame {
 	private String username;
 	private String password;
 	private EmailSender emailSender;
+	
+	
+	private boolean useEncryption = false;
+	private boolean useSignature = false;
+	
+	// key used to encrypt email content
+	private String messageKey = null;
+	
+	// private key used to sign message
+	private String privateKey = null;
+	private JCheckBox useEncryptionCheckBox;
+	private JCheckBox useSignatureCheckBox;
 
 	/**
 	 * Launch the application.
@@ -111,14 +130,12 @@ public class SendMessageFrame extends JFrame {
 		textFieldBCC.setText("");
 		textFieldSubject.setText("");
 		textAreaContent.setText("");
-		tglbtnEncrypt.setSelected(false);
-		tglBtnDigitalSignature.setSelected(false);
 		setVisible(true);
 	}
 	
 	private void initialize() {
 		setTitle("Send Message");
-		setBounds(100, 100, 600, 500);
+		setBounds(100, 100, 600, 565);
 		setLocationRelativeTo(null);
 		
 		JPanel contentPane = new JPanel();
@@ -131,9 +148,9 @@ public class SendMessageFrame extends JFrame {
 		
 		JLabel lblBcc = new JLabel("BCC :");
 		
-		JLabel lblSubject = new JLabel("SUBJECT :");
+		JLabel lblSubject = new JLabel("Subject:");
 		
-		JLabel lblContent = new JLabel("CONTENT :");
+		JLabel lblContent = new JLabel("Content:");
 		
 		textFieldTo = new JTextField();
 		textFieldTo.setColumns(10);
@@ -151,9 +168,34 @@ public class SendMessageFrame extends JFrame {
 		
 		btnSend = new JButton("Send");
 		
-		tglbtnEncrypt = new JToggleButton("Encrypt");
+		useEncryptionCheckBox = new JCheckBox("Use Encryption");
+		useEncryptionCheckBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JCheckBox encryptCheck = (JCheckBox) e.getSource();
+				if(encryptCheck.isSelected()){
+					enableEncryption();
+				} else {
+					disableEncryption();
+				}
+				
+				// biar enableEncryption/disableEncryption yang menentukan state checked/tidak
+				encryptCheck.setSelected(false);
+			}
+		});
 		
-		tglBtnDigitalSignature = new JToggleButton("Digital Signature");
+		useSignatureCheckBox = new JCheckBox("Use Signature");
+		useSignatureCheckBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JCheckBox signatureCheck = (JCheckBox) e.getSource();
+				if(signatureCheck.isSelected()){
+					enableSignature();
+				} else {
+					disableSignature();
+				}
+				
+				signatureCheck.setSelected(false);
+			}
+		});
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -162,28 +204,24 @@ public class SendMessageFrame extends JFrame {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addComponent(scrollPane, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 554, Short.MAX_VALUE)
 						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addComponent(lblTo)
-							.addGap(52)
-							.addComponent(textFieldTo, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
-						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addComponent(lblCc)
-							.addGap(52)
-							.addComponent(textFieldCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
-						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addComponent(lblBcc)
-							.addGap(46)
-							.addComponent(textFieldBCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
-						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addComponent(tglbtnEncrypt, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(tglBtnDigitalSignature)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 76, GroupLayout.PREFERRED_SIZE))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(useSignatureCheckBox)
+								.addComponent(useEncryptionCheckBox))
+							.addGap(18)
+							.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 134, GroupLayout.PREFERRED_SIZE))
+						.addComponent(lblContent)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(lblSubject)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(lblSubject)
+								.addComponent(lblBcc)
+								.addComponent(lblCc)
+								.addComponent(lblTo))
 							.addGap(23)
-							.addComponent(textFieldSubject, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
-						.addComponent(lblContent))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(textFieldTo, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
+								.addComponent(textFieldCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
+								.addComponent(textFieldBCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
+								.addComponent(textFieldSubject, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))))
 					.addContainerGap())
 		);
 		gl_contentPane.setVerticalGroup(
@@ -205,20 +243,71 @@ public class SendMessageFrame extends JFrame {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(lblSubject)
 						.addComponent(textFieldSubject, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGap(11)
 					.addComponent(lblContent)
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 247, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 34, GroupLayout.PREFERRED_SIZE)
-						.addComponent(tglBtnDigitalSignature, GroupLayout.PREFERRED_SIZE, 34, GroupLayout.PREFERRED_SIZE)
-						.addComponent(tglbtnEncrypt, GroupLayout.PREFERRED_SIZE, 34, GroupLayout.PREFERRED_SIZE))
-					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addComponent(useEncryptionCheckBox)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(useSignatureCheckBox))
+						.addComponent(btnSend, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addContainerGap())
 		);
 		
 		textAreaContent = new JTextArea();
 		scrollPane.setViewportView(textAreaContent);
 		contentPane.setLayout(gl_contentPane);
+	}
+	
+	public void disableSignature() {
+		useSignature = false;
+		privateKey = null;
+	}
+
+	public void enableSignature() {
+		EnterKeyDialog dialog = new EnterKeyDialog(new Callback() {
+			public void doAction(Object param) {
+				String key = (String) param;
+				setPrivateKeyValue(key);
+				useSignature = true;
+				useSignatureCheckBox.setSelected(true);
+			}
+		});
+		dialog.setTitle("Enter private key...");
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+		
+	}
+
+	public void disableEncryption(){
+		useEncryption = false;
+		messageKey = null;
+	}
+	
+	// pop dialog box for key, set encryption key
+	public void enableEncryption(){
+		EnterKeyDialog dialog = new EnterKeyDialog(new Callback() {
+			public void doAction(Object param) {
+				String key = (String) param;
+				setMessageKeyValue(key);
+				useEncryption = true;
+				useEncryptionCheckBox.setSelected(true);
+			}
+		});
+		dialog.setTitle("Enter encryption key...");
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+		
+	}
+	
+	public void setMessageKeyValue(String key){
+		this.messageKey = key;
+	}
+	
+	public void setPrivateKeyValue(String key){
+		this.privateKey = key;
 	}
 }
