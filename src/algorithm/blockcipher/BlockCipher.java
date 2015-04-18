@@ -62,9 +62,7 @@ public class BlockCipher {
 		cipher.setKey(keyString);
 		
 		if (isEncryption) {
-			
 			System.out.println("Encryption process started...");
-			
 		}
 		else {
 			System.out.println("Decryption process started...");
@@ -328,7 +326,6 @@ public class BlockCipher {
 		}
 	}
 
-	
 	public void CFB() {
 		if (isEncryption) {
 			// padding to be multiples of 256 bit
@@ -418,5 +415,4 @@ public class BlockCipher {
 	public static long bytesToMegabytes(long bytes) {
 	    return bytes / MEGABYTE;
 	}
-
 }

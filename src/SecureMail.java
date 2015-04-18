@@ -157,10 +157,10 @@ public class SecureMail {
 			public void actionPerformed(ActionEvent arg0) {
 				if (sendMessageFrame==null) {
 					sendMessageFrame = new SendMessageFrame(username, password);
-				}
-				else {
+				} else {
 					sendMessageFrame.show(username, password);
 				}
+				sendMessageFrame.setVisible(true);
 			}
 		});
 	}
@@ -244,6 +244,11 @@ public class SecureMail {
 		btnChangeAccount = new JButton("Change Account");
 		
 		btnGenerateKeys = new JButton("Generate Keys");
+		btnGenerateKeys.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 		GroupLayout gl_toolbar = new GroupLayout(toolbar);
 		gl_toolbar.setHorizontalGroup(
 			gl_toolbar.createParallelGroup(Alignment.LEADING)
