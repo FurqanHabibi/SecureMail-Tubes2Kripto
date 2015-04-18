@@ -1,6 +1,7 @@
 package algorithm.blockcipher;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -384,6 +385,10 @@ public class BlockCipher {
 		}
 	}
 	
+	public void setInput(String in){
+		input = in.getBytes();
+	}
+	
 	public void readInput() {
 		
 		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -408,6 +413,16 @@ public class BlockCipher {
 				e1.printStackTrace();
 			}
 		}
+	}
+	
+	public String getOutput(){
+		String str = "";
+		try {
+			str = new String(output, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return str;
 	}
 	
 	private static final long MEGABYTE = 1024L * 1024L;
