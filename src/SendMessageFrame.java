@@ -58,10 +58,10 @@ public class SendMessageFrame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public SendMessageFrame(String username, String password) {
+	public SendMessageFrame(String _username, String _password) {
 		initialize();
-		this.username = username;
-		this.password = password;
+		this.username = _username;
+		this.password = _password;
 		emailSender = new EmailSender();
 
 		btnSend.addActionListener(new ActionListener() {
