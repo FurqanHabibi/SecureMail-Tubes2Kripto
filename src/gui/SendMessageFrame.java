@@ -3,6 +3,7 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.math.BigInteger;
 import java.util.Date;
 
 import javax.mail.internet.AddressException;
@@ -32,15 +33,21 @@ import java.beans.PropertyChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
+import algorithm.blockcipher.BlockCipher;
+import algorithm.dsa.ECDSA;
+import algorithm.dsa.Point;
+
 
 public class SendMessageFrame extends JFrame {
+	private final String BEGIN_SIGNATURE = "#### BEGIN SIGNATURE ####";
+	private final String END_SIGNATURE = "#### END SIGNATURE ####";
 	private JTextField textFieldTo;
 	private JTextField textFieldCC;
 	private JTextField textFieldBCC;
 	private JTextField textFieldSubject;
 	private JTextArea textAreaContent;
 	private JButton btnSend;
-
+	
 	private String smtpProt = "smtps";
 	private String smtpHost = "smtp.gmail.com";
 	private String username;
@@ -111,7 +118,40 @@ public class SendMessageFrame extends JFrame {
 				
 				mm.setSubject(textFieldSubject.getText());
 				
-				mm.setContent(textAreaContent.getText());
+				String finalContent = textAreaContent.getText();
+				
+				if(useSignature){
+					BigInteger _p = new BigInteger ("11");
+					BigInteger _a = new BigInteger ("1");
+					BigInteger _b = new BigInteger ("6");
+					BigInteger _xG = new BigInteger ("2");
+					BigInteger _yG = new BigInteger ("4");
+					BigInteger _n = new BigInteger ("13");
+					
+					BigInteger pri = ECDSA.generatePrivateKeyECDSA(_n);
+					
+					ECDSA ecdsa = new ECDSA();
+					ecdsa.signatureGeneration(pri, "Alifa Nurani Putri", _a, _b, _p, new Point(_xG,_yG), _n);
+					
+					finalContent += BEGIN_SIGNATURE + "\n" + ecdsa.getR() + "\n" + ecdsa.getS() + "\n" + END_SIGNATURE + "\n";
+				}
+				
+				
+				if(useEncryption){
+					BlockCipher cipher = new BlockCipher();
+					cipher.setIsEncryption(true);
+					cipher.setInput(finalContent);
+					cipher.setKey(messageKey);
+					cipher.CBC();
+					
+					finalContent = cipher.getOutput();
+				} else {
+					finalContent = textAreaContent.getText();
+				} 
+				
+				System.out.println(finalContent);
+				
+				mm.setContent(finalContent);
 				
 				emailSender.sendEmail(smtpProt, smtpHost, username, password, mm);
 			}
@@ -296,7 +336,6 @@ public class SendMessageFrame extends JFrame {
 				setMessageKeyValue(key);
 				useEncryption = true;
 				useEncryptionCheckBox.setSelected(true);
-				System.out.println(key);
 			}
 		});
 		dialog.setTitle("Enter encryption key...");
