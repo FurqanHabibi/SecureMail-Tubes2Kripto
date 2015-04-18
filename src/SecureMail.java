@@ -32,6 +32,7 @@ import models.EmailModel;
 import models.FolderModel;
 import models.MessageModel;
 import emailprocessing.EmailDownloader;
+import gui.SendMessageFrame;
 
 
 public class SecureMail {

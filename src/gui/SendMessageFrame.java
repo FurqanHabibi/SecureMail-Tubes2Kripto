@@ -1,3 +1,4 @@
+package gui;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -295,6 +296,7 @@ public class SendMessageFrame extends JFrame {
 				setMessageKeyValue(key);
 				useEncryption = true;
 				useEncryptionCheckBox.setSelected(true);
+				System.out.println(key);
 			}
 		});
 		dialog.setTitle("Enter encryption key...");
