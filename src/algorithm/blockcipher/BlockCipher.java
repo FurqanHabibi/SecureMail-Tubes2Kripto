@@ -2,6 +2,7 @@ package algorithm.blockcipher;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -439,7 +440,6 @@ public class BlockCipher {
 			File file = fileChooser.getSelectedFile();
 			try {
 				Files.write(file.toPath(), output);
-				// System.out.println(new String(output, "UTF-8"));
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
