@@ -52,6 +52,14 @@ public class ReceiveMessageFrame extends JFrame {
 	// public key for signature verification
 	Point publicKey = null;
 	
+	// currently used ECC params
+	BigInteger _p = null;
+	BigInteger _a = null;
+	BigInteger _b = null;
+	BigInteger _xG = null;
+	BigInteger _yG = null;
+	BigInteger _n = null;
+	
 	/**
 	 * Launch the application.
 	 
@@ -140,8 +148,12 @@ public class ReceiveMessageFrame extends JFrame {
 				EnterKeyDialog dialog = new EnterKeyDialog(new Callback() {
 					public void doAction(Object param) {
 						String key = (String) param;
-						publicKey = new Point(new BigInteger(key.split(" ")[0]), new BigInteger(key.split(" ")[1]));
-						confirmSignature(publicKey);
+						if(isValidPublicKeyFormat(key)){
+							setPublicKey(key);
+							confirmSignature();
+						} else {
+							JOptionPane.showMessageDialog(null, "Format public key tidak sesuai.");
+						}
 					}
 				});
 				dialog.setTitle("Enter public key...");
@@ -216,10 +228,32 @@ public class ReceiveMessageFrame extends JFrame {
 		textAreaContent.setEditable(false);
 	}
 	
-	public void confirmSignature(Point pubKey){
+	public boolean isValidPublicKeyFormat(String key){
+		// p a b
+		// xg yg
+		// n
+		// pubkey_x pubkey_y
+		// total 8 elemen
+		String keys[] = key.split("\n|\r\n| ");
+		return (keys.length == 8);
+	}
+	
+	public void setPublicKey(String key){
+		String keys[] = key.split("\n|\r\n| ");
 		
-		BigInteger r = pubKey.x;
-		BigInteger s = pubKey.y;
+		_p = new BigInteger(keys[0]);
+		_a = new BigInteger(keys[1]);
+		_b = new BigInteger(keys[2]);
+		_xG = new BigInteger(keys[3]);
+		_yG = new BigInteger(keys[4]);
+		_n = new BigInteger(keys[5]);
+		
+		publicKey = new Point(new BigInteger(keys[6]), new BigInteger(keys[7]));
+	}
+	
+	public void confirmSignature(){
+		BigInteger r = publicKey.x;
+		BigInteger s = publicKey.y;
 		
 		String content = textAreaContent.getText();
 		String realContent = content.split("\n" + BEGIN_SIGNATURE)[0];
@@ -233,13 +267,6 @@ public class ReceiveMessageFrame extends JFrame {
 				s = new BigInteger(lineContents[i+2], 16);
 			}
 		}
-		
-		BigInteger _p = new BigInteger ("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",16);
-		BigInteger _a = new BigInteger ("ffffffff00000001000000000000000000000000fffffffffffffffffffffffc",16);
-		BigInteger _b = new BigInteger ("5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",16);
-		BigInteger _xG = new BigInteger ("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",16);
-		BigInteger _yG = new BigInteger ("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5",16);
-		BigInteger _n = new BigInteger ("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",16);
 		
 		ECDSA ecdsa = new ECDSA();
 		if(r != null && s != null){

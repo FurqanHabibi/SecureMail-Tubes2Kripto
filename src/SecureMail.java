@@ -149,7 +149,7 @@ public class SecureMail {
 
 		btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				emailModel = getEmails();
+				emailModel = refresh();
 				listModelFolders.clear();
 				for (FolderModel fm : emailModel.getFolders()) {
 					listModelFolders.addElement(fm.getName());
@@ -246,7 +246,60 @@ public class SecureMail {
 			return emailModel;
 		}
 	}
-
+	
+	private EmailModel refresh(){
+		emailDownloader = new EmailDownloader();
+		emailDownloader.setParams(imapProt, imapHost, username, password);
+		emailDownloader.signIn();
+		
+		EmailModel emailModel = new EmailModel();
+		Folder[] folders = emailDownloader.getFolders();
+		for (Folder f : folders) {
+			FolderModel fm = new FolderModel(f.getName());
+			emailModel.addFolderModel(fm);
+			emailDownloader.openFolder(f);
+			Message[] messages = emailDownloader.getMessagesInFolder(f);
+			for (Message m : messages) {
+				MessageModel mm = new MessageModel();
+				fm.addMessageModel(mm);
+				try {
+					
+					mm.setFrom(m.getFrom());
+					
+					mm.setTOs(m.getRecipients(Message.RecipientType.TO));
+					
+					mm.setCCs(m.getRecipients(Message.RecipientType.CC));
+					
+					mm.setBCCs(m.getRecipients(Message.RecipientType.BCC));
+					
+					mm.setSentDate(m.getSentDate());
+					
+					mm.setSubject(m.getSubject());
+					
+					mm.setContent(emailDownloader.getMessageContent(m));
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			emailDownloader.closeFolder(f);
+		}
+		
+		try {
+			FileOutputStream fileOut = new FileOutputStream(username + ".ser");
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(emailModel);
+			out.close();
+			fileOut.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		emailDownloader.signOut();
+		return emailModel;
+	}
+	
 	private void showSignIn() {
 		textFieldUserName.setText("");
 		textFieldPassword.setText("");
@@ -286,6 +339,7 @@ public class SecureMail {
 		btnGenerateKeys.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				GenerateKeysFrame frame = new GenerateKeysFrame();
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
 			}
 		});

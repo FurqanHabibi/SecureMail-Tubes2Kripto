@@ -208,20 +208,21 @@ public class ECDSA {
 	public static void main(String[] args) {
 		
 		/*
-		BigInteger _p = new BigInteger ("fffffffffffffffffffffffffffffffeffffffffffffffff",16);
-		BigInteger _a = new BigInteger ("fffffffffffffffffffffffffffffffefffffffffffffffc",16);
-		BigInteger _b = new BigInteger ("64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1",16);
-		BigInteger _xG = new BigInteger ("188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012",16);
-		BigInteger _yG = new BigInteger ("07192b95ffc8da78631011ed6b24cdd573f977a11e794811",16);
-		BigInteger _n = new BigInteger  ("ffffffffffffffffffffffff99def836146bc9b1b4d22831",16);
-		
-		BigInteger _p = new BigInteger ("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",16);
-		BigInteger _a = new BigInteger ("ffffffff00000001000000000000000000000000fffffffffffffffffffffffc",16);
-		BigInteger _b = new BigInteger ("5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",16);
-		BigInteger _xG = new BigInteger ("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",16);
-		BigInteger _yG = new BigInteger ("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5",16);
-		BigInteger _n = new BigInteger ("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",16);
-		
+		    // NIST P-192
+			BigInteger _p = new BigInteger ("fffffffffffffffffffffffffffffffeffffffffffffffff",16);
+			BigInteger _a = new BigInteger ("fffffffffffffffffffffffffffffffefffffffffffffffc",16);
+			BigInteger _b = new BigInteger ("64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1",16);
+			BigInteger _xG = new BigInteger ("188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012",16);
+			BigInteger _yG = new BigInteger ("07192b95ffc8da78631011ed6b24cdd573f977a11e794811",16);
+			BigInteger _n = new BigInteger  ("ffffffffffffffffffffffff99def836146bc9b1b4d22831",16);
+			
+			// NIST P-256
+			BigInteger _p = new BigInteger ("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",16);
+			BigInteger _a = new BigInteger ("ffffffff00000001000000000000000000000000fffffffffffffffffffffffc",16);
+			BigInteger _b = new BigInteger ("5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",16);
+			BigInteger _xG = new BigInteger ("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",16);
+			BigInteger _yG = new BigInteger ("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5",16);
+			BigInteger _n = new BigInteger ("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",16);
 		
 		BigInteger _p = new BigInteger ("23");
 		BigInteger _a = new BigInteger ("1");
@@ -253,6 +254,9 @@ public class ECDSA {
 		// System.out.println("pub: " + pub);
 		
 		ECDSA ecdsa = new ECDSA();
+		
+		//ecdsa.generatePublicKeyECDSA(dA, _a, _b, _p, _G);
+		//ecdsa.generatePrivateKeyECDSA(n);
 		
 		ecdsa.signatureGeneration(pri, "Alifa Nurani Putri syulululululu", _a, _b, _p, new Point(_xG,_yG), _n);
 		
