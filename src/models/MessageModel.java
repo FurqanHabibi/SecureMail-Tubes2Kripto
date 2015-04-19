@@ -1,10 +1,11 @@
 package models;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.mail.Address;
 
-public class MessageModel {
+public class MessageModel implements Serializable {
 
 	private Address[] from;
 	private Address[] TOs;

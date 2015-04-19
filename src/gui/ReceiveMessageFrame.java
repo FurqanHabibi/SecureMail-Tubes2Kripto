@@ -14,6 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -47,6 +48,9 @@ public class ReceiveMessageFrame extends JFrame {
 	private JTextField textFieldSubject;
 	private JTextArea textAreaContent;
 	private JButton btnSend;
+	
+	// public key for signature verification
+	Point publicKey = null;
 	
 	/**
 	 * Launch the application.
@@ -115,8 +119,36 @@ public class ReceiveMessageFrame extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		
 		btnSend = new JButton("Decrypt");
+		btnSend.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				EnterKeyDialog dialog = new EnterKeyDialog(new Callback() {
+					public void doAction(Object param) {
+						String key = (String) param;
+						decryptMessageContent(key);
+					}
+				});
+				dialog.setTitle("Enter decryption key...");
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);
+			}
+		});
 		
 		JButton btnNewButton = new JButton("Verify");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				// get public key
+				EnterKeyDialog dialog = new EnterKeyDialog(new Callback() {
+					public void doAction(Object param) {
+						String key = (String) param;
+						publicKey = new Point(new BigInteger(key.split(" ")[0]), new BigInteger(key.split(" ")[1]));
+						confirmSignature(publicKey);
+					}
+				});
+				dialog.setTitle("Enter public key...");
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);
+			}
+		});
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
@@ -182,5 +214,53 @@ public class ReceiveMessageFrame extends JFrame {
 		textFieldBCC.setEditable(false);
 		textFieldSubject.setEditable(false);
 		textAreaContent.setEditable(false);
+	}
+	
+	public void confirmSignature(Point pubKey){
+		
+		BigInteger r = pubKey.x;
+		BigInteger s = pubKey.y;
+		
+		String content = textAreaContent.getText();
+		String realContent = content.split("\n" + BEGIN_SIGNATURE)[0];
+		
+		System.out.println("Content: " + "\n\"" + realContent + "\"");
+		
+		String[] lineContents = content.split("\n|\r\n");
+		for(int i=0;i<lineContents.length;i++){
+			if(lineContents[i].equals(BEGIN_SIGNATURE)){
+				r = new BigInteger(lineContents[i+1], 16);
+				s = new BigInteger(lineContents[i+2], 16);
+			}
+		}
+		
+		BigInteger _p = new BigInteger ("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",16);
+		BigInteger _a = new BigInteger ("ffffffff00000001000000000000000000000000fffffffffffffffffffffffc",16);
+		BigInteger _b = new BigInteger ("5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",16);
+		BigInteger _xG = new BigInteger ("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",16);
+		BigInteger _yG = new BigInteger ("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5",16);
+		BigInteger _n = new BigInteger ("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",16);
+		
+		ECDSA ecdsa = new ECDSA();
+		if(r != null && s != null){
+			boolean valid = ecdsa.verifySignature(publicKey, realContent,  _a, _b, _p, new Point(_xG,_yG), _n , r, s);
+			if(valid){
+				JOptionPane.showMessageDialog(null, "Signature is valid.");
+			} else {
+				JOptionPane.showMessageDialog(null, "Signature is invalid!");
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "No signature is found.");
+		}
+	}
+	
+	public void decryptMessageContent(String key){
+		BlockCipher cipher = new BlockCipher();
+		cipher.setIsEncryption(false);
+		cipher.setInputWithByteString(textAreaContent.getText());
+		cipher.setKey(key);
+		cipher.CBC();
+		
+		textAreaContent.setText(cipher.getOutput());
 	}
 }

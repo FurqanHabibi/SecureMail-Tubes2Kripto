@@ -1,9 +1,10 @@
 package models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EmailModel {
+public class EmailModel implements Serializable{
 
 	private List<FolderModel> folders;
 	

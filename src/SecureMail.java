@@ -4,6 +4,15 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Scanner;
 
 import javax.mail.Address;
 import javax.mail.Folder;
@@ -32,6 +41,7 @@ import models.EmailModel;
 import models.FolderModel;
 import models.MessageModel;
 import emailprocessing.EmailDownloader;
+import gui.GenerateKeysFrame;
 import gui.ReceiveMessageFrame;
 import gui.SendMessageFrame;
 
@@ -168,46 +178,73 @@ public class SecureMail {
 	}
 	
 	private EmailModel getEmails() {
-		emailDownloader = new EmailDownloader();
-		emailDownloader.setParams(imapProt, imapHost, username, password);
-		emailDownloader.signIn();
-		
-		EmailModel emailModel = new EmailModel();
-		Folder[] folders = emailDownloader.getFolders();
-		for (Folder f : folders) {
-			FolderModel fm = new FolderModel(f.getName());
-			emailModel.addFolderModel(fm);
-			emailDownloader.openFolder(f);
-			Message[] messages = emailDownloader.getMessagesInFolder(f);
-			for (Message m : messages) {
-				MessageModel mm = new MessageModel();
-				fm.addMessageModel(mm);
-				try {
-					
-					mm.setFrom(m.getFrom());
-					
-					mm.setTOs(m.getRecipients(Message.RecipientType.TO));
-					
-					mm.setCCs(m.getRecipients(Message.RecipientType.CC));
-					
-					mm.setBCCs(m.getRecipients(Message.RecipientType.BCC));
-					
-					mm.setSentDate(m.getSentDate());
-					
-					mm.setSubject(m.getSubject());
-					
-					mm.setContent(emailDownloader.getMessageContent(m));
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		File file = new File(username + ".ser");
+		if(file.exists() && !file.isDirectory()){
+			EmailModel emailModel = null;
+			try {
+				FileInputStream fileIn = new FileInputStream(username + ".ser");
+				ObjectInputStream in = new ObjectInputStream(fileIn);
+				emailModel = (EmailModel) in.readObject();
+				in.close();
+				fileIn.close();
+			} catch(Exception e) {
+				e.printStackTrace();
+				return null;
 			}
-			emailDownloader.closeFolder(f);
+			
+			return emailModel;
+		} else {
+			emailDownloader = new EmailDownloader();
+			emailDownloader.setParams(imapProt, imapHost, username, password);
+			emailDownloader.signIn();
+			
+			EmailModel emailModel = new EmailModel();
+			Folder[] folders = emailDownloader.getFolders();
+			for (Folder f : folders) {
+				FolderModel fm = new FolderModel(f.getName());
+				emailModel.addFolderModel(fm);
+				emailDownloader.openFolder(f);
+				Message[] messages = emailDownloader.getMessagesInFolder(f);
+				for (Message m : messages) {
+					MessageModel mm = new MessageModel();
+					fm.addMessageModel(mm);
+					try {
+						
+						mm.setFrom(m.getFrom());
+						
+						mm.setTOs(m.getRecipients(Message.RecipientType.TO));
+						
+						mm.setCCs(m.getRecipients(Message.RecipientType.CC));
+						
+						mm.setBCCs(m.getRecipients(Message.RecipientType.BCC));
+						
+						mm.setSentDate(m.getSentDate());
+						
+						mm.setSubject(m.getSubject());
+						
+						mm.setContent(emailDownloader.getMessageContent(m));
+						
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				emailDownloader.closeFolder(f);
+			}
+			
+			try {
+				FileOutputStream fileOut = new FileOutputStream(username + ".ser");
+				ObjectOutputStream out = new ObjectOutputStream(fileOut);
+				out.writeObject(emailModel);
+				out.close();
+				fileOut.close();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			
+			emailDownloader.signOut();
+			return emailModel;
 		}
-		
-		emailDownloader.signOut();
-		return emailModel;
 	}
 
 	private void showSignIn() {
@@ -248,7 +285,8 @@ public class SecureMail {
 		btnGenerateKeys = new JButton("Generate Keys");
 		btnGenerateKeys.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+				GenerateKeysFrame frame = new GenerateKeysFrame();
+				frame.setVisible(true);
 			}
 		});
 		GroupLayout gl_toolbar = new GroupLayout(toolbar);

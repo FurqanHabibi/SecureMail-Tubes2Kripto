@@ -1,9 +1,10 @@
 package models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FolderModel {
+public class FolderModel implements Serializable{
 
 	private String name;
 	private List<MessageModel> messages;

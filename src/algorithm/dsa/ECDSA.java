@@ -177,28 +177,28 @@ public class ECDSA {
 			BigInteger a, BigInteger b, BigInteger p, Point _G, BigInteger _n, BigInteger r, BigInteger s) {
 		boolean val = false;
 
-		ECC.setParam(a, b, p, G);
+		ECC.setParam(a, b, p, _G);
 		QA = publicK;
 		message=_message;
 
-		if (r.compareTo(n) != -1
+		if (r.compareTo(_n) != -1
 				|| r.compareTo(BigInteger.ZERO) != 1) {
 			return val;
 		}
 
-		if (s.compareTo(n) != -1
+		if (s.compareTo(_n) != -1
 				|| s.compareTo(BigInteger.ZERO) != 1) {
 			return val;
 		}
 
 		cal_e();
-		w = s.modInverse(n);
-		u1 = e.multiply(w).mod(n);
-		u2 = r.multiply(w).mod(n);
-		Point P = ECC.add(ECC.times(u1, G), ECC.times(u2, QA));
-		if (P.x.equals(r.mod(n)))
+		w = s.modInverse(_n);
+		u1 = e.multiply(w).mod(_n);
+		u2 = r.multiply(w).mod(_n);
+		Point P = ECC.add(ECC.times(u1, _G), ECC.times(u2, QA));
+		if (P.x.equals(r.mod(_n)))
 			val = true;
-
+		
 		return val;
 	}
 
@@ -246,8 +246,12 @@ public class ECDSA {
 		BigInteger _yG = new BigInteger ("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5",16);
 		BigInteger _n = new BigInteger ("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",16);
 		
-		BigInteger pri = ECDSA.generatePrivateKeyECDSA(_n);
-		Point pub = ECDSA.generatePublicKeyECDSA(pri, _a, _b, _p, new Point(_xG, _yG));
+		BigInteger pri = new BigInteger("100600789377147023461072082702934359437205647979148520028102921837690663199091");
+		Point pub = new Point(new BigInteger("19212080424464390540063596887575911368054913997721170672481358068768598080413"), new BigInteger("12323678239184652402150218964501452920351633338132841133745710599253251301001"));
+		
+		// System.out.println("pri: " + pri);
+		// System.out.println("pub: " + pub);
+		
 		ECDSA ecdsa = new ECDSA();
 		
 		ecdsa.signatureGeneration(pri, "Alifa Nurani Putri syulululululu", _a, _b, _p, new Point(_xG,_yG), _n);

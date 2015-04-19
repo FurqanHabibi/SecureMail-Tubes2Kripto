@@ -11,6 +11,7 @@ import java.util.Scanner;
 import java.util.jar.Pack200.Unpacker;
 
 import javax.swing.JFileChooser;
+import javax.xml.bind.DatatypeConverter;
 
 
 public class BlockCipher {
@@ -28,6 +29,8 @@ public class BlockCipher {
 				| IllegalAccessException
 				| javax.swing.UnsupportedLookAndFeelException ex) {
 		}
+		
+//		System.out.println("muhammad harits elfahmi\n".split(" |\n").length);
 		
 		BlockCipher cipher = new BlockCipher();
 		Scanner sc = new Scanner(System.in);
@@ -101,6 +104,24 @@ public class BlockCipher {
 		
 		cipher.saveOutput();
 		
+		cipher.printByteArray(cipher.input);
+		System.out.println();
+		
+		cipher.printByteArray(cipher.output);
+		System.out.println();
+		
+		System.out.println("Hasil enkripsi: " + cipher.getOutput());
+		
+		cipher.setIsEncryption(false);
+		cipher.input = new String(cipher.output, StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8);
+		cipher.printByteArray(cipher.input);
+		System.out.println();
+//		cipher.setKey(keyString);
+//		cipher.CBC();
+//		cipher.printByteArray(cipher.output);
+//		System.out.println();
+//		System.out.println("Hasil dekripsi: " + cipher.getOutput());
+		
 //		cipher.setKey("tes");
 //		
 //		byte[] tes = new byte[32];
@@ -117,8 +138,8 @@ public class BlockCipher {
 	private Rijndael rijndael;
 	private Serpent serpent;
 	
-	private byte[] input;
-	private byte[] output;
+	public byte[] input;
+	public byte[] output;
 	private byte[] key;
 	private byte[] IV;
 	private byte[] C0;
@@ -127,7 +148,7 @@ public class BlockCipher {
 	
 	JFileChooser fileChooser;
 	
-	private boolean isRijndael = true;
+	private boolean isRijndael = false;
 	private boolean isSerpent = false;
 	
 	public BlockCipher() {
@@ -386,7 +407,17 @@ public class BlockCipher {
 	}
 	
 	public void setInput(String in){
-		input = in.getBytes();
+		input = in.getBytes(StandardCharsets.UTF_8);
+	}
+	
+	public void setInputWithByteString(String _byteStrings){
+		_byteStrings = _byteStrings.replaceAll("\r\n", "\n");
+		String byteStrings[] = _byteStrings.split(" |\n");
+		byte _input[] = new byte[byteStrings.length];
+		for(int i=0;i<_input.length;i++){
+			_input[i] = Byte.parseByte(byteStrings[i]);
+		}
+		input = _input;
 	}
 	
 	public void readInput() {
@@ -408,6 +439,7 @@ public class BlockCipher {
 			File file = fileChooser.getSelectedFile();
 			try {
 				Files.write(file.toPath(), output);
+				// System.out.println(new String(output, "UTF-8"));
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -417,11 +449,7 @@ public class BlockCipher {
 	
 	public String getOutput(){
 		String str = "";
-		try {
-			str = new String(output, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+		str = new String(output, StandardCharsets.UTF_8);
 		return str;
 	}
 	
@@ -429,5 +457,22 @@ public class BlockCipher {
 
 	public static long bytesToMegabytes(long bytes) {
 	    return bytes / MEGABYTE;
+	}
+	
+	public void printByteArray(byte[] bytes) {
+		for (int i=0; i<bytes.length; i++) {
+			System.out.print(bytes[i]+" ");
+		}
+	}
+	
+	public String getByteString(){
+		String result = "";
+		for(int i=0;i<output.length;i++){
+			result += output[i];
+			if(i != output.length - 1){
+				result += " ";
+			}
+		}
+		return result;
 	}
 }
