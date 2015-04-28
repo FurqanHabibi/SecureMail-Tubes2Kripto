@@ -37,6 +37,8 @@ import javax.swing.event.ChangeEvent;
 import algorithm.blockcipher.BlockCipher;
 import algorithm.dsa.ECDSA;
 import algorithm.dsa.Point;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 
 public class ReceiveMessageFrame extends JFrame {
@@ -59,6 +61,7 @@ public class ReceiveMessageFrame extends JFrame {
 	BigInteger _xG = null;
 	BigInteger _yG = null;
 	BigInteger _n = null;
+	private int currentAlgoIndex = 0;
 	
 	/**
 	 * Launch the application.
@@ -95,7 +98,7 @@ public class ReceiveMessageFrame extends JFrame {
 	
 	private void initialize() {
 		setTitle("Decrypt & Verify Message");
-		setBounds(100, 100, 600, 505);
+		setBounds(100, 100, 600, 571);
 		setLocationRelativeTo(null);
 		
 		JPanel contentPane = new JPanel();
@@ -161,6 +164,19 @@ public class ReceiveMessageFrame extends JFrame {
 				dialog.setVisible(true);
 			}
 		});
+		
+		JComboBox algoDropDown = new JComboBox();
+		algoDropDown.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComboBox algoList = (JComboBox) e.getSource();
+				int index = algoList.getSelectedIndex();
+				// System.out.println("index: " + index);
+				setAlgoByIndex(index);
+			}
+		});
+		algoDropDown.setModel(new DefaultComboBoxModel(new String[] {"HARS", "Serpent", "Rijndael"}));
+		
+		JLabel lblNewLabel = new JLabel("Choose Algorithm:");
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
@@ -180,9 +196,12 @@ public class ReceiveMessageFrame extends JFrame {
 								.addComponent(textFieldCC, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
 								.addComponent(textFieldBCC, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
 								.addComponent(textFieldSubject, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)))
-						.addComponent(lblContent)
+						.addComponent(lblContent, Alignment.TRAILING)
 						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 134, GroupLayout.PREFERRED_SIZE)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
+								.addComponent(algoDropDown, Alignment.LEADING, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(btnSend, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 134, GroupLayout.PREFERRED_SIZE)
+								.addComponent(lblNewLabel, Alignment.LEADING))
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(btnNewButton, GroupLayout.PREFERRED_SIZE, 139, GroupLayout.PREFERRED_SIZE)))
 					.addContainerGap())
@@ -211,10 +230,14 @@ public class ReceiveMessageFrame extends JFrame {
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 247, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(lblNewLabel)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(algoDropDown, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
 						.addComponent(btnNewButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addComponent(btnSend, GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE))
-					.addGap(7))
+						.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 36, GroupLayout.PREFERRED_SIZE))
+					.addGap(22))
 		);
 		
 		textAreaContent = new JTextArea();
@@ -225,7 +248,6 @@ public class ReceiveMessageFrame extends JFrame {
 		textFieldCC.setEditable(false);
 		textFieldBCC.setEditable(false);
 		textFieldSubject.setEditable(false);
-		textAreaContent.setEditable(false);
 	}
 	
 	public boolean isValidPublicKeyFormat(String key){
@@ -286,8 +308,24 @@ public class ReceiveMessageFrame extends JFrame {
 		cipher.setIsEncryption(false);
 		cipher.setInputWithByteString(textAreaContent.getText());
 		cipher.setKey(key);
+		
+		if(currentAlgoIndex == 0){
+			cipher.setRijndael(false);
+			cipher.setSerpent(false);
+		} else if(currentAlgoIndex == 1){
+			cipher.setRijndael(false);
+			cipher.setSerpent(true);
+		} else if(currentAlgoIndex == 2){
+			cipher.setRijndael(true);
+			cipher.setSerpent(false);
+		} 
+		
 		cipher.CBC();
 		
 		textAreaContent.setText(cipher.getOutput());
+	}
+	
+	public void setAlgoByIndex(int index){
+		currentAlgoIndex = index;
 	}
 }

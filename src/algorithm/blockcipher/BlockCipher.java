@@ -475,4 +475,12 @@ public class BlockCipher {
 		}
 		return result;
 	}
+	
+	public void setRijndael(boolean val){
+		isRijndael = val;
+	}
+	
+	public void setSerpent(boolean val){
+		isSerpent = val;
+	}
 }

@@ -37,6 +37,8 @@ import javax.swing.event.ChangeEvent;
 import algorithm.blockcipher.BlockCipher;
 import algorithm.dsa.ECDSA;
 import algorithm.dsa.Point;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 
 public class SendMessageFrame extends JFrame {
@@ -74,6 +76,8 @@ public class SendMessageFrame extends JFrame {
 	BigInteger _xG = null;
 	BigInteger _yG = null;
 	BigInteger _n = null;
+	private JComboBox algoDropDown;
+	int currentAlgoIndex = 0;
 	
 	/**
 	 * Launch the application.
@@ -141,12 +145,22 @@ public class SendMessageFrame extends JFrame {
 					cipher.setIsEncryption(true);
 					cipher.setInput(finalContent);
 					cipher.setKey(messageKey);
+					
+					if(currentAlgoIndex == 0){
+						cipher.setRijndael(false);
+						cipher.setSerpent(false);
+					} else if(currentAlgoIndex == 1){
+						cipher.setRijndael(false);
+						cipher.setSerpent(true);
+					} else if(currentAlgoIndex == 2){
+						cipher.setRijndael(true);
+						cipher.setSerpent(false);
+					}
+					
 					cipher.CBC();
 					
 					finalContent = cipher.getByteString();
-				} else {
-					finalContent = textAreaContent.getText();
-				} 
+				}
 				
 				System.out.println(finalContent);
 				
@@ -236,18 +250,40 @@ public class SendMessageFrame extends JFrame {
 				signatureCheck.setSelected(false);
 			}
 		});
+		
+		algoDropDown = new JComboBox();
+		algoDropDown.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComboBox algoList = (JComboBox) e.getSource();
+				int index = algoList.getSelectedIndex();
+				// System.out.println("index: " + index);
+				setAlgoByIndex(index);
+			}
+		});
+		algoDropDown.setEnabled(false);
+		algoDropDown.setModel(new DefaultComboBoxModel(new String[] {"HARS", "Serpent", "Rijndael"}));
+		
+		JLabel lblChooseAlgorithm = new JLabel("Choose Algorithm:");
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPane.createSequentialGroup()
 					.addContainerGap()
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-						.addComponent(scrollPane, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 554, Short.MAX_VALUE)
-						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(useSignatureCheckBox)
-								.addComponent(useEncryptionCheckBox))
-							.addGap(18)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+						.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 554, Short.MAX_VALUE)
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addComponent(useSignatureCheckBox)
+									.addGap(33)
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+										.addComponent(lblChooseAlgorithm)
+										.addComponent(useEncryptionCheckBox))
+									.addGap(54))
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addComponent(algoDropDown, GroupLayout.PREFERRED_SIZE, 133, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)))
+							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 134, GroupLayout.PREFERRED_SIZE))
 						.addComponent(lblContent)
 						.addGroup(gl_contentPane.createSequentialGroup()
@@ -258,10 +294,10 @@ public class SendMessageFrame extends JFrame {
 								.addComponent(lblTo))
 							.addGap(23)
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(textFieldTo, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
-								.addComponent(textFieldCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
-								.addComponent(textFieldBCC, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
-								.addComponent(textFieldSubject, GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))))
+								.addComponent(textFieldTo, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+								.addComponent(textFieldCC, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+								.addComponent(textFieldBCC, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+								.addComponent(textFieldSubject, GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE))))
 					.addContainerGap())
 		);
 		gl_contentPane.setVerticalGroup(
@@ -290,11 +326,15 @@ public class SendMessageFrame extends JFrame {
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(useEncryptionCheckBox)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+								.addComponent(useSignatureCheckBox)
+								.addComponent(useEncryptionCheckBox))
 							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(useSignatureCheckBox))
+							.addComponent(lblChooseAlgorithm)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(algoDropDown, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
 						.addComponent(btnSend, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-					.addContainerGap())
+					.addContainerGap(30, Short.MAX_VALUE))
 		);
 		
 		textAreaContent = new JTextArea();
@@ -329,6 +369,7 @@ public class SendMessageFrame extends JFrame {
 	public void disableEncryption(){
 		useEncryption = false;
 		messageKey = null;
+		algoDropDown.setEnabled(true);
 	}
 	
 	// pop dialog box for key, set encryption key
@@ -339,6 +380,7 @@ public class SendMessageFrame extends JFrame {
 				setMessageKeyValue(key);
 				useEncryption = true;
 				useEncryptionCheckBox.setSelected(true);
+				algoDropDown.setEnabled(true);
 			}
 		});
 		dialog.setTitle("Enter encryption key...");
@@ -379,5 +421,9 @@ public class SendMessageFrame extends JFrame {
 		System.out.println("_yG: " + _yG);
 		System.out.println("_n: " + _n);
 		System.out.println("privateKey: " + privateKey);
+	}
+	
+	public void setAlgoByIndex(int index){
+		currentAlgoIndex = index;
 	}
 }
